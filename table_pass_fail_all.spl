@@ -1,0 +1,9 @@
+| inputlookup splunk_test_lookup.csv | table method, code 
+| join method type=outer
+[search index="test" code=0 | stats count by method,code | rename count as count_pass | table method, count_pass]
+| join method type=outer
+[search index="test" code=-1 | stats count by method,code | rename count as count_fail | table method, count_fail]
+| join method type=outer
+[search index="test" code="*" | stats count by method | rename count as count_all | table method, count_all]
+| table method, count_pass, count_fail, count_all
+
