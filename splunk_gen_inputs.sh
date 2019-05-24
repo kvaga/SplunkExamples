@@ -1,12 +1,20 @@
 #!/bin/bash
+function usage(){
+        echo "Usage: $0 path/to/folderi sourcetype filePrefix";
+}
 if [ -z $1 ];
 then
-        echo "Usage: $0 path/to/folderi sourcetype";
+        usage
         exit 1;
 fi;
 if [ -z $2 ];
 then
-        echo "Usage: $0 path/to/folderi sourcetype";
+        usage
+        exit 1;
+fi;
+if [ -z $3 ];
+then
+        usage
         exit 1;
 fi;
 
@@ -15,10 +23,10 @@ FOLDER=$1;
 #echo PATH=$PATH
 SOURCETYPE=$2
 echo SOURCETYPE=$SOURCETYPE
-PREFIX=$SOURCETYPE
+PREFIX=$3
 echo PREFIX=$PREFIX
 for d in $(find $FOLDER -type d );
-#for d in UKO16 UKO18 UKO40 UKO42 UKO44 UKO52 UKO54 UKO55 UKO70 UKO78 USV13 USV16 USV18 USV38 USV40 USV42 USV44 USV52 USV54 USV55 USV70;
+#for d in folder1 folder2 folder3;
         do
         PATH_LOGS=$d;
         #echo PATH_LOGS=$PATH_LOGS;
@@ -35,3 +43,4 @@ for d in $(find $FOLDER -type d );
         echo "crcSalt = <SOURCE>";
         echo ""
 done;
+
