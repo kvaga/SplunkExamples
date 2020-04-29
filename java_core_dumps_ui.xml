@@ -1,0 +1,167 @@
+<form>
+  <label>Java Core Dumps</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="dropdown" token="file_name" searchWhenChanged="true">
+      <label>File name</label>
+      <fieldForLabel>source</fieldForLabel>
+      <fieldForValue>source</fieldForValue>
+      <search>
+        <query>index="temp_efs_cpu_issue" 
+| dedup source
+|  table source</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>CPU Consumption by Thread Groups From file: $file_name$</title>
+      <table>
+        <search>
+          <query>index="temp_efs_cpu_issue"    source="$file_name$" 
+| rex "3XMTHREADINFO\s+\"(?&lt;thread_name&gt;.*)\".*state:(?&lt;thread_state&gt;\w+).*([\r\n].*)+.*3XMCPUTIME\s+CPU usage total: (?&lt;thread_cpu_total_secs&gt;.*)\ssecs,.*([\r\n].*)+3XMHEAPALLOC\s+Heap bytes allocated since last GC cycle=(?&lt;thread_heap_bytes_allocated&gt;\d+)\s"
+|  where  ISNOTNULL(thread_name)
+| eval thread_group=case(
+			thread_name LIKE "WebContainer%","WebContainer", 
+			thread_name LIKE "HttpTimeoutPool%","HttpTimeoutPool",
+			thread_name LIKE "WsSessionInvalidatorThread%","WsSessionInvalidatorThread",
+			thread_name LIKE "GC Slave%","GC Slave",
+			thread_name LIKE "WorkManager.healthcheckControlWM%","WorkManager.healthcheckControlWM",
+			thread_name LIKE "Thread%","Thread",
+			thread_name LIKE "pool%","pool",
+			thread_name LIKE "HystrixTimer%","HystrixTimer",
+			thread_name LIKE "forcedPublishQueryContainer%","forcedPublishQueryContainer",
+			thread_name LIKE "logback%","logback",
+			thread_name LIKE "AIO Timer Thread%","AIO Timer Thread",
+			thread_name LIKE "WorkManager.ufsTechBreaks%","WorkManager.ufsTechBreaks",
+			thread_name LIKE "IProfiler%","IProfiler",
+			thread_name LIKE "healthcheckSelfRegistrationScheduler%","healthcheckSelfRegistrationScheduler",
+			thread_name LIKE "Concurrent Mark Helper%","Concurrent Mark Helper",
+			thread_name LIKE "RxScheduledExecutorPool%","RxScheduledExecutorPool",
+			thread_name LIKE "SocketEndPoint.ReceiveThread%","SocketEndPoint.ReceiveThread",
+			thread_name LIKE "Okio Watchdog%","Okio Watchdog",
+			thread_name LIKE "DefaultMessageListenerContainer%","DefaultMessageListenerContainer",
+			thread_name LIKE "integrationModuleExecutor%","integrationModuleExecutor",
+			thread_name LIKE "LocalNotificationServiceDispatcher%","LocalNotificationServiceDispatcher",
+			thread_name LIKE "Timer%","Timer",
+			thread_name LIKE "HAManager.thread.pool%","HAManager.thread.pool",
+			thread_name LIKE "jmsContainerForFilters%","jmsContainerForFilters",
+			thread_name LIKE "JIT Compilation Thread%","JIT Compilation Thread",
+			1=1, "Other")
+| stats count as Count sum(thread_cpu_total_secs) as cpu_consumption  by thread_group
+| sort - cpu_consumption</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">true</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Heap Bytes Consumption by Thread Groups From file: $file_name$</title>
+      <table>
+        <search>
+          <query>index="temp_efs_cpu_issue"    source="$file_name$" 
+| rex "3XMTHREADINFO\s+\"(?&lt;thread_name&gt;.*)\".*state:(?&lt;thread_state&gt;\w+).*([\r\n].*)+.*3XMCPUTIME\s+CPU usage total: (?&lt;thread_cpu_total_secs&gt;.*)\ssecs,.*([\r\n].*)+3XMHEAPALLOC\s+Heap bytes allocated since last GC cycle=(?&lt;thread_heap_bytes_allocated&gt;\d+)\s"
+|  where  ISNOTNULL(thread_name)
+| eval thread_group=case(
+			thread_name LIKE "WebContainer%","WebContainer", 
+			thread_name LIKE "HttpTimeoutPool%","HttpTimeoutPool",
+			thread_name LIKE "WsSessionInvalidatorThread%","WsSessionInvalidatorThread",
+			thread_name LIKE "GC Slave%","GC Slave",
+			thread_name LIKE "WorkManager.healthcheckControlWM%","WorkManager.healthcheckControlWM",
+			thread_name LIKE "Thread%","Thread",
+			thread_name LIKE "pool%","pool",
+			thread_name LIKE "HystrixTimer%","HystrixTimer",
+			thread_name LIKE "forcedPublishQueryContainer%","forcedPublishQueryContainer",
+			thread_name LIKE "logback%","logback",
+			thread_name LIKE "AIO Timer Thread%","AIO Timer Thread",
+			thread_name LIKE "WorkManager.ufsTechBreaks%","WorkManager.ufsTechBreaks",
+			thread_name LIKE "IProfiler%","IProfiler",
+			thread_name LIKE "healthcheckSelfRegistrationScheduler%","healthcheckSelfRegistrationScheduler",
+			thread_name LIKE "Concurrent Mark Helper%","Concurrent Mark Helper",
+			thread_name LIKE "RxScheduledExecutorPool%","RxScheduledExecutorPool",
+			thread_name LIKE "SocketEndPoint.ReceiveThread%","SocketEndPoint.ReceiveThread",
+			thread_name LIKE "Okio Watchdog%","Okio Watchdog",
+			thread_name LIKE "DefaultMessageListenerContainer%","DefaultMessageListenerContainer",
+			thread_name LIKE "integrationModuleExecutor%","integrationModuleExecutor",
+			thread_name LIKE "LocalNotificationServiceDispatcher%","LocalNotificationServiceDispatcher",
+			thread_name LIKE "Timer%","Timer",
+			thread_name LIKE "HAManager.thread.pool%","HAManager.thread.pool",
+			thread_name LIKE "jmsContainerForFilters%","jmsContainerForFilters",
+			thread_name LIKE "JIT Compilation Thread%","JIT Compilation Thread",
+			1=1, "Other")
+| stats count as Count sum(thread_heap_bytes_allocated) as heap_consumption  by thread_group
+| sort - heap_consumption</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">true</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>WebContainers by CPU Consumption From file: $file_name$</title>
+      <table>
+        <search>
+          <query>index="temp_efs_cpu_issue"    source="$file_name$" "WebContainer :"
+| rex "3XMTHREADINFO\s+\"(?&lt;thread_name&gt;.*)\".*state:(?&lt;thread_state&gt;\w+).*([\r\n].*)+.*3XMCPUTIME\s+CPU usage total: (?&lt;thread_cpu_total_secs&gt;.*)\ssecs,.*([\r\n].*)+3XMHEAPALLOC\s+Heap bytes allocated since last GC cycle=(?&lt;thread_heap_bytes_allocated&gt;\d+)\s"
+|  where  ISNOTNULL(thread_name)
+| table thread_name thread_cpu_total_secs thread_heap_bytes_allocated
+| sort - thread_cpu_total_secs
+|rename thread_heap_bytes_allocated TO bytes_allocated
+</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>WebContainers by Heap bytes allocated From file: $file_name$</title>
+      <table>
+        <search>
+          <query>index="temp_efs_cpu_issue"    source="$file_name$" "WebContainer :"
+| rex "3XMTHREADINFO\s+\"(?&lt;thread_name&gt;.*)\".*state:(?&lt;thread_state&gt;\w+).*([\r\n].*)+.*3XMCPUTIME\s+CPU usage total: (?&lt;thread_cpu_total_secs&gt;.*)\ssecs,.*([\r\n].*)+3XMHEAPALLOC\s+Heap bytes allocated since last GC cycle=(?&lt;thread_heap_bytes_allocated&gt;\d+)\s"
+|  where  ISNOTNULL(thread_name)
+| table thread_name thread_cpu_total_secs thread_heap_bytes_allocated
+| sort - thread_heap_bytes_allocated
+|rename thread_heap_bytes_allocated TO bytes_allocated
+</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>
